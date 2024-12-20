@@ -1,4 +1,4 @@
-module github.com/songxiang/go-msrpc
+module github.com/oiweiwei/go-msrpc
 
 go 1.21.5
 

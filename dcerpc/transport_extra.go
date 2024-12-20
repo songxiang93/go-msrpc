@@ -3,8 +3,8 @@ package dcerpc
 import (
 	"context"
 	"fmt"
-	"github.com/songxiang/go-msrpc/extra"
-	"github.com/songxiang/go-msrpc/ssp/spnego"
+	"github.com/oiweiwei/go-msrpc/extra"
+	"github.com/oiweiwei/go-msrpc/ssp/spnego"
 	"sync"
 	"time"
 )
@@ -157,7 +157,6 @@ func (c *transport) BindSync(ctx context.Context, opts ...Option) (Conn, error) 
 				default:
 				}
 			}
-			fmt.Println("先执行了 " + string(clientChallenge))
 			o.Security.ctx = context.WithValue(o.Security.ctx, "clientBytes", clientChallenge)
 		}
 
