@@ -3,8 +3,8 @@ package dcerpc
 import (
 	"context"
 	"fmt"
-	"github.com/oiweiwei/go-msrpc/extra"
-	"github.com/oiweiwei/go-msrpc/ssp/spnego"
+	"github.com/songxiang/go-msrpc/extra"
+	"github.com/songxiang/go-msrpc/ssp/spnego"
 	"sync"
 	"time"
 )
