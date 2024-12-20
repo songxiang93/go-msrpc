@@ -15,6 +15,7 @@ func EndpointMapper(ctx context.Context, addr string, opts ...dcerpc.Option) dce
 	return dcerpc.WithEndpointMapper(NewMapper(ctx, addr, opts...))
 }
 
+// This function creates a new dcerpc.EndpointMapper
 func NewMapper(ctx context.Context, addr string, opts ...dcerpc.Option) dcerpc.EndpointMapper {
 
 	m := &Mapper{}
@@ -28,11 +29,15 @@ func NewMapper(ctx context.Context, addr string, opts ...dcerpc.Option) dcerpc.E
 		}
 	}
 
+	//找到这个："[ncacn_ip_tcp]:135", "ncacn_np:epmapper"
+	// ncacn：面向连接
+	// ncacn_np: np指的是命名管道,epmapper是命名管道服务
 	bindings, err := m.WellKnown.Map(ctx, &dcerpc.Binding{StringBinding: *binding, SyntaxID: *EpmSyntaxV3_0})
 	if err != nil {
 		return m.WithErr(err)
 	}
 
+	// 解析选项
 	o, err := dcerpc.ParseOptions(ctx, opts...)
 	if err == dcerpc.ErrNoSecurityContext {
 		opts = append(opts, dcerpc.WithInsecure())
@@ -40,6 +45,7 @@ func NewMapper(ctx context.Context, addr string, opts ...dcerpc.Option) dcerpc.E
 
 	var conn dcerpc.Conn
 
+	// 遍历绑定
 	for _, binding := range bindings {
 		binding.NetworkAddress = addr
 		o.Logger.Debug().Msgf("endpoint mapper: dialing %s", binding)

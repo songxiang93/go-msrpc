@@ -245,6 +245,7 @@ func (t *conn) Bind(ctx context.Context, opts ...Option) (Conn, error) {
 		// use endpoint mapper to retrieve the bindings.
 		if t.settings.EndpointMapper != nil {
 			// figure out the string binding from the endpoint mapper.
+			//这里通过epm去找到合适的endpoint
 			if bindings, err = t.settings.EndpointMapper.Map(ctx, &Binding{
 				SyntaxID:      *o.AbstractSyntaxes[0],
 				StringBinding: t.settings.StringBinding,
@@ -272,6 +273,7 @@ func (t *conn) Bind(ctx context.Context, opts ...Option) (Conn, error) {
 	var selected []*transport
 
 	if !t.settings.NoReuseTransport {
+		//重复利用已建立的连接:
 		for i := range bindings {
 			// find already established transport.
 			if selected = t.transports[bindings[i].String()]; len(selected) > 0 {
@@ -292,11 +294,12 @@ func (t *conn) Bind(ctx context.Context, opts ...Option) (Conn, error) {
 			}
 		}
 	}
-
+	//如果之前就没有建立连接，len(selected)为0:
 	if len(selected) == 0 {
 		t.logger.Debug().Msgf("no established transport was found")
 		for i := range bindings {
 			t.logger.Debug().Msgf("etablishing new transport for binding %s", bindings[i])
+			//!!!!!!!!!!!!!!!!!!!!!真正的建立连接！！！！！！！！！！！！！！！！！！！！！
 			if selected, err = t.dial(ctx, bindings[i]); err != nil {
 				t.logger.Error().Err(err).Msgf("bind: dial %s error", bindings[i])
 				continue
@@ -315,7 +318,7 @@ func (t *conn) Bind(ctx context.Context, opts ...Option) (Conn, error) {
 			continue
 		}
 		t.logger.Debug().Msgf("binding the selected transport")
-		if conn, err = selected[i].Bind(ctx, opts...); err != nil {
+		if conn, err = selected[i].BindSync(ctx, opts...); err != nil {
 			t.logger.Err(err).Msgf("selected transport error")
 			continue
 		}

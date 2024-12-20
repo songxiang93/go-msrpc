@@ -283,6 +283,14 @@ func (c *transport) DecodePacket(ctx context.Context, pkt *Packet, raw []byte) (
 	if pad := int(pkt.SecurityTrailer.AuthPadLength); pkt.end-pad >= pkt.start {
 		pkt.end -= pad
 	}
+
+	if int(pkt.SecurityTrailer.AuthPadLength) == 0 {
+		_, ok := pkt.PDU.(*AlterContextResponse)
+		if ok {
+			pkt.end -= 8
+		}
+	}
+
 	// decode the stub data.
 	n, err := pkt.Body.DecodeFrom(pkt.raw[pkt.start:pkt.end], pkt.Header.PacketDRep, maxLen)
 	if err != nil {

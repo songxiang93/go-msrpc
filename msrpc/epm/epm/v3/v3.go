@@ -328,6 +328,7 @@ func (o *xxx_DefaultEpmClient) AlterContext(ctx context.Context, opts ...dcerpc.
 	return o.cc.AlterContext(ctx, opts...)
 }
 func NewEpmClient(ctx context.Context, cc dcerpc.Conn, opts ...dcerpc.Option) (EpmClient, error) {
+	// epm抽象语法:接口号和版本
 	cc, err := cc.Bind(ctx, append(opts, dcerpc.WithAbstractSyntax(EpmSyntaxV3_0))...)
 	if err != nil {
 		return nil, err

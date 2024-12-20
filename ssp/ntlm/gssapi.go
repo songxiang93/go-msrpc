@@ -119,8 +119,16 @@ func (m *Mechanism) Init(ctx context.Context, tok *gssapi.Token) (*gssapi.Token,
 
 		return &gssapi.Token{Payload: b}, gssapi.ContextComplete(ctx)
 	}
+	var b []byte
+	var err error
+	negToken, ok := ctx.Value("negToken").([]byte)
+	if ok {
+		b = negToken
+	} else {
+		//这里是发送MessageType1:
+		b, err = m.Negotiate(ctx)
 
-	b, err := m.Negotiate(ctx)
+	}
 	if err != nil {
 		return nil, gssapi.ContextError(ctx, gssapi.Failure, err)
 	}

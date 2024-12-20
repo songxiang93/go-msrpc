@@ -99,6 +99,7 @@ func (a *Authentifier) Respond(ctx context.Context, b []byte) ([]byte, error) {
 		}
 
 		if resp.State == AcceptCompleted {
+			//这里是完成ntlm三阶段后的处理
 
 			// the spnego negotiation completed successfully, verify
 			// the mechanism list mic.

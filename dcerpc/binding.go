@@ -249,6 +249,8 @@ func ParseSyntaxID(s string) (*SyntaxID, error) {
 
 func ParseBindingURL(s string) (*Binding, error) {
 
+	//tcp://guest:guest@127.0.0.1:54212/00000000-0000-0000-0000000000000000/12345678-1234-abcd-ef0001234567cffb/v1.0
+	//smb://guest:guest@127.0.0.1:445/@WIN_PC/winreg/00000000-0000-0000-0000000000000000/338cd001-2244-31f1-aaaa900038001003/v1.0
 	u, err := url.Parse(s)
 	if err != nil {
 		return nil, fmt.Errorf("parse string binding url: %w", err)
@@ -264,6 +266,9 @@ func ParseBindingURL(s string) (*Binding, error) {
 		if len(p) == 0 {
 			return nil, fmt.Errorf("invalid binding url: named pipe is missing")
 		}
+
+		//@WIN_PC/winreg/00000000-0000-0000-0000000000000000/338cd001-2244-31f1-aaaa900038001003/v1.0
+
 		if !strings.HasPrefix(p[0], "@") {
 			url.StringBinding.ComputerName = u.Hostname()
 		} else {
@@ -288,6 +293,7 @@ func ParseBindingURL(s string) (*Binding, error) {
 	}
 
 	switch {
+	//objectId
 	case len(p) > 2:
 		if url.StringBinding.ObjectUUID, err = uuid.Parse(p[0]); err != nil {
 			return nil, err
@@ -295,10 +301,12 @@ func ParseBindingURL(s string) (*Binding, error) {
 		p = p[1:]
 		fallthrough
 	case len(p) > 1:
+		//fallthrough从上一个case继续
+		// ifuuid：解析interfaceId
 		if url.SyntaxID.IfUUID, err = uuid.Parse(p[0]); err != nil {
 			return nil, fmt.Errorf("invalid binding url: parse syntax: %w", err)
 		}
-
+		//解析版本号
 		if _, err := fmt.Sscanf(p[1], "v%d.%d", &url.SyntaxID.IfVersionMajor, &url.SyntaxID.IfVersionMinor); err != nil {
 			return nil, fmt.Errorf("invalid binding url: parse version: %w", err)
 		}
@@ -320,7 +328,13 @@ func ParseStringBinding(s string) (*StringBinding, error) {
 		url StringBinding
 		err error
 	)
+	//ncacn_ip_tcp的形式：
+	// URL: tcp://username:password@server-name:port/object/interface/version
+	//tcp://guest:guest@127.0.0.1:54212/00000000-0000-0000-0000000000000000/12345678-1234-abcd-ef0001234567cffb/v1.0
 
+	//管道的形式：
+	// URL (?): smb://username:password@server-name:smb_port/@computer/pipe/object/interface/version
+	//Example URL: smb://guest:guest@127.0.0.1:445/@WIN_PC/winreg/00000000-0000-0000-0000000000000000/338cd001-2244-31f1-aaaa900038001003/v1.0
 	if strings.Contains(s, "://") {
 		// parse url.
 		b, err := ParseBindingURL(s)

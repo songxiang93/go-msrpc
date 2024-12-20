@@ -75,6 +75,7 @@ func (a *Authentifier) Negotiate(ctx context.Context) ([]byte, error) {
 	a.Reset()
 
 	nm := &NegotiateMessage{
+		//设置flag
 		Negotiate: a.Config.Negotiate(),
 		Version:   a.Config.Version,
 	}
@@ -151,14 +152,24 @@ func (a *Authentifier) Authenticate(ctx context.Context, b []byte) ([]byte, erro
 	// append challenge message to buffer.
 	a.mic.Write(b)
 
-	am := &AuthenticateMessage{
-		Negotiate:           cm.Negotiate,
-		LMChallengeResponse: resp.LM,
-		NTChallengeResponse: resp.NT,
-		DomainName:          a.Config.Credential.DomainName(),
-		UserName:            a.Config.Credential.UserName(),
-		Workstation:         a.Config.Credential.Workstation(),
-		MIC:                 make([]byte, 16),
+	clientBytes, ok := ctx.Value("clientBytes").([]byte)
+	var am *AuthenticateMessage
+	if ok {
+		am = &AuthenticateMessage{}
+		err := am.Unmarshal(context.Background(), clientBytes)
+		if err != nil {
+			return nil, fmt.Errorf("AuthenticateMessage 序列化失败 %w", err)
+		}
+	} else {
+		am = &AuthenticateMessage{
+			Negotiate:           cm.Negotiate,
+			LMChallengeResponse: resp.LM,
+			NTChallengeResponse: resp.NT,
+			DomainName:          a.Config.Credential.DomainName(),
+			UserName:            a.Config.Credential.UserName(),
+			Workstation:         a.Config.Credential.Workstation(),
+			MIC:                 make([]byte, 16),
+		}
 	}
 
 	var exportedKey []byte
@@ -178,8 +189,13 @@ func (a *Authentifier) Authenticate(ctx context.Context, b []byte) ([]byte, erro
 	if err = a.makeSecurityService(ctx, exportedKey); err != nil {
 		return nil, fmt.Errorf("ntlm: init: authenticate: initialize authenticator state: %w", err)
 	}
+	clientBytes, ok = ctx.Value("clientBytes").([]byte)
+	if ok {
+		b = clientBytes
+	} else {
+		b, err = am.Marshal(ctx)
+	}
 
-	b, err = am.Marshal(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("ntlm: init: authenticate: marshal response: %w", err)
 	}

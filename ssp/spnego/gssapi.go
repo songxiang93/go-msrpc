@@ -74,7 +74,7 @@ func (m *Mechanism) Init(ctx context.Context, tok *gssapi.Token) (*gssapi.Token,
 	var err error
 
 	if tok.Payload == nil {
-
+		//在spengo协商的时候，直接发送ntlm报文
 		b, err := m.Negotiate(ctx)
 		if err != nil {
 			return nil, gssapi.ContextError(ctx, gssapi.Failure, err)
