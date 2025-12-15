@@ -285,9 +285,11 @@ func (cc *Security) Init(ctx context.Context, b []byte) ([]byte, error) {
 		return []byte{}, nil
 	}
 
-	opts := cc.options()
+	var opts = make([]gssapi.Option, 0, 0)
 	if val, okSign := ctx.Value(extra.SKIP_SIGN_OPT).(SecurityMask); okSign {
 		opts = cc.options(val)
+	} else {
+		opts = cc.options()
 	}
 
 	tok, err := gssapi.InitSecurityContext(cc.ctx, &gssapi.Token{Payload: b}, opts...)
