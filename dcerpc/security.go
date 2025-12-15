@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"github.com/oiweiwei/go-msrpc/extra"
 	"sync"
 	"sync/atomic"
 
@@ -284,7 +285,12 @@ func (cc *Security) Init(ctx context.Context, b []byte) ([]byte, error) {
 		return []byte{}, nil
 	}
 
-	tok, err := gssapi.InitSecurityContext(cc.ctx, &gssapi.Token{Payload: b}, cc.options()...)
+	opts := cc.options()
+	if val, okSign := ctx.Value(extra.SKIP_SIGN_OPT).(SecurityMask); okSign {
+		opts = cc.options(val)
+	}
+
+	tok, err := gssapi.InitSecurityContext(cc.ctx, &gssapi.Token{Payload: b}, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("init security context: %w", err)
 	}
